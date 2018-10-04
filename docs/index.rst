@@ -6,7 +6,7 @@
 trayicon
 ========
 
-|Linux| |License|
+|Linux| |License| |Doc|
 
 
 trayicon is a multi-GUI-toolkit system tray icon package. It is intended 
@@ -24,6 +24,8 @@ and can therefore be used in the same way regardless of the toolkit.
 However, tktray does not handle icon resizing so the icon rendering in 
 the system tray is very toolkit dependent.
 
+Project page: https://github.com/j4321/trayicon
+
 
 .. toctree::
    :maxdepth: 2
@@ -38,3 +40,6 @@ the system tray is very toolkit dependent.
 .. |License| image:: https://img.shields.io/github/license/j4321/trayicon.svg
     :target: https://www.gnu.org/licenses/gpl-3.0.en.html
     :alt: License
+.. |Doc| image:: https://readthedocs.org/projects/tkfontchooser/badge/?version=latest
+    :target: https://tkfontchooser.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status

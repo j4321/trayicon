@@ -1,7 +1,7 @@
 trayicon
 ========
 
-|Linux| |License|
+|Linux| |License| |Doc|
 
 
 trayicon is a multi-GUI-toolkit system tray icon package. It is intended 
@@ -34,10 +34,13 @@ Documentation
 
 See the example in the *example/* folder.
 
-
+Full documentation on https://trayicon.readthedocs.io.
 
 .. |Linux| image:: https://img.shields.io/badge/platform-Linux-blue.svg
     :alt: Platform
 .. |License| image:: https://img.shields.io/github/license/j4321/trayicon.svg
     :target: https://www.gnu.org/licenses/gpl-3.0.en.html
     :alt: License
+.. |Doc| image:: https://readthedocs.org/projects/trayicon/badge/?version=latest
+    :target: https://trayicon.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
