@@ -30,5 +30,5 @@ setup(name='trayicon',
       py_modules=["trayicon.qticon",
                   "trayicon.tkicon",
                   "trayicon.gtkicon"],
-      packages=["trayicon"])
-      package_data=[{"trayicon": "packages.tcl"}])
+      packages=["trayicon"],
+      package_data={'trayicon': ['packages.tcl']},)
