@@ -68,6 +68,7 @@ toolkits = trayicon.get_available_gui_toolkits()
 root = tk.Tk()
 
 for gui in toolkits:
-    tk.Button(root, text=gui, command=lambda g=gui: make_icon(g)).pack()
+    if toolkits[gui]:
+        tk.Button(root, text=gui, command=lambda g=gui: make_icon(g)).pack()
 
 root.mainloop()

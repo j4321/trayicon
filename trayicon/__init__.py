@@ -35,6 +35,12 @@ from trayicon import tkicon, qticon, gtkicon
 def get_available_gui_toolkits():
     """
     Check which gui toolkits are available to create a system tray icon.
+    
+    Output: dict
+    
+    ::
+    
+        {'gtk': bool, 'qt': bool, 'tk': bool}
 
     Requires tclsh (usually provided by the tcl package).
     """

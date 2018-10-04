@@ -1,3 +1,8 @@
+.. trayicon documentation master file, created by
+   sphinx-quickstart on Thu Oct  4 15:06:40 2018.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
 trayicon
 ========
 
@@ -20,21 +25,13 @@ However, tktray does not handle icon resizing so the icon rendering in
 the system tray is very toolkit dependent.
 
 
-Requirements
-------------
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
 
-- Linux
-- Python 3
-- tclsh for the ``get_available_gui_toolkits`` function (usually provided by the tcl package)
-- the python modules for the GUI toolkits you want to use: Qt, GTK3, `tktray <https://code.google.com/archive/p/tktray/downloads>`_
-
-
-Documentation
--------------
-
-See the example in the *example/* folder.
-
-
+   documentation
+   example
+   genindex
 
 .. |Linux| image:: https://img.shields.io/badge/platform-Linux-blue.svg
     :alt: Platform

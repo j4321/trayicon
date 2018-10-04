@@ -34,73 +34,118 @@ except ValueError:
 
 
 class SubMenu(Gtk.Menu):
+    """
+    Menu or submenu for the system tray icon TrayIcon.
+    
+    Gtk version.
+    """
     def __init__(self, *args, **kwargs):
+        """Create a SubMenu instance."""
         Gtk.Menu.__init__(self)
 
     def add_command(self, label="", command=None):
+        """Add an item with given label and associated to given command to the menu."""
         item = Gtk.MenuItem(label=label)
-        self.append(item)
-        if command is not None:
-            item.connect("activate", lambda *args: command())
-        item.show()
-
-    def add_checkbutton(self, label="", command=None):
-        item = Gtk.CheckMenuItem(label=label)
         self.append(item)
         if command is not None:
             item.connect("activate", lambda *args: command())
         item.show()
 
     def add_cascade(self, label="", menu=None):
+        """Add a submenu (SubMenu instance) with given label to the menu."""
         item = Gtk.MenuItem(label=label)
         self.append(item)
         if menu is not None:
             item.set_submenu(menu)
         item.show()
 
+    def add_checkbutton(self, label="", command=None):
+        """
+        Add a checkbutton item with given label and associated to given command to the menu.
+        
+        The checkbutton state can be obtained/changed using the ``get_item_value``/``set_item_value`` methods.
+        """
+        item = Gtk.CheckMenuItem(label=label)
+        self.append(item)
+        if command is not None:
+            item.connect("activate", lambda *args: command())
+        item.show()
+
     def add_separator(self):
+        """Add a separator to the menu."""
         sep = Gtk.SeparatorMenuItem()
         self.append(sep)
         sep.show()
 
     def delete(self, item1, item2=None):
+        """
+        Delete all items between item1 and item2 (included).
+        
+        If item2 is None, delete only the item corresponding to item1. 
+        """
+        if len(self.get_children()) == 0:
+            return
         index1 = self.index(item1)
         if item2 is None:
             self.remove(self.get_children()[index1])
         else:
             index2 = self.index(item2)
             c = self.get_children()
-            for i in range(index1, index2):
+            for i in range(index1, index2 + 1):
                 self.remove(c[i])
 
-    def index(self, index):
-        if isinstance(index, int):
-            return index
-        elif index == "end":
+    def index(self, item):
+        """
+        Return the index of item.
+        
+        item can be an integer corresponding to the entry number in the menu,
+        the label of a menu entry or "end". In the fisrt case, the returned index will
+        be identical to item.
+        """
+        if isinstance(item, int):
+            if item <= len(self.get_children()):
+                return item
+            else:
+                raise ValueError("%r not in menu" % item)
+        elif item == "end":
             return len(self.get_children())
         else:
             try:
-                i = [i.get_label() for i in self.get_children()].index(index)
+                i = [i.get_label() for i in self.get_children()].index(item)
             except ValueError:
-                raise ValueError("%r not in menu" % index)
+                raise ValueError("%r not in menu" % item)
             return i
 
     def get_item_label(self, item):
+        """Return item's label."""
         return self.get_children()[self.index(item)].get_label()
 
     def set_item_label(self, item, label):
+        """Set the item's label to given label."""
         self.get_children()[self.index(item)].set_label(label)
 
     def get_item_menu(self, item):
+        """
+        Return item's menu.
+        
+        It is assumed that the item is a cascade.
+        """
         return self.get_children()[self.index(item)].get_submenu()
 
     def set_item_menu(self, item, menu):
+        """
+        Set item's menu to given menu (SubMenu instance).
+        
+        It is assumed that the item is a cascade.
+        """
         self.get_children()[self.index(item)].set_submenu(menu)
 
     def disable_item(self, item):
+        """Put item in disabled (unresponsive) state."""
         self.get_children()[self.index(item)].set_sensitive(False)
 
     def enable_item(self, item):
+        """Put item in normal (responsive) state."""
         self.get_children()[self.index(item)].set_sensitive(True)
 
     def get_item_value(self, item):
@@ -114,8 +159,10 @@ class SubMenu(Gtk.Menu):
 
 
 class TrayIcon:
-    """Gtk system tray icon."""
+    """System tray icon, Gtk version."""
     def __init__(self, icon, fallback_icon_path, appid="TrayIcon", **kwargs):
+        """Create a TrayIcon instance."""
+        
         self.menu = SubMenu()
 
         icon_exists = Gtk.IconTheme.get_default().has_icon(icon)
@@ -146,10 +193,12 @@ class TrayIcon:
     def _on_popup_menu(self, icon, button, time):
         self.menu.popup(None, None, Gtk.StatusIcon.position_menu, icon, button, time)
 
-    def _change_icon_appind(self, icon, desc):
+    def _change_icon_appind(self, icon, desc=''):
+        """Change icon."""
         self.tray_icon.set_icon_full(icon, desc)
 
-    def _change_icon_fallback(self, icon, desc):
+    def _change_icon_fallback(self, icon, desc=''):
+        """Change icon."""
         self.tray_icon.set_from_file(icon)
 
     def loop(self, tk_window):
@@ -168,10 +217,13 @@ class TrayIcon:
             self._click_bindings['middle']()
 
     def bind_left_click(self, command):
+        """Bind command to left click on the icon."""
         self._click_bindings['left'] = command
 
     def bind_double_click(self, command):
+        """Bind command to middle click on the icon."""
         self._click_bindings['double'] = command
 
     def bind_middle_click(self, command):
+        """Bind command to double left click on the icon."""
         self._click_bindings['middle'] = command
