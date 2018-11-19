@@ -7,3 +7,5 @@ AUR
 .coverage
 htmlcov
 _build
+*.project
+windows_support/
