@@ -119,13 +119,21 @@ class SubMenu(tkinter.Menu):
                 return i
 
     def get_group_value(self, group):
+        """Return group's current value."""
         return self._groups[group].get()
 
     def set_group_value(self, group, value):
+        """Set group's current value."""
         self._groups[group].set(value)
 
     def get_item_group(self, item, group):
-        var = self.entrycget(self.index(item), 'variable')
+        """Return item's group (radiobuttons only)."""
+        ind = self.index(item)
+        try:
+            self.entrycget(ind, 'value')
+        except tkinter.TclError:
+            raise TypeError("Menu entry {item} is not a radiobutton".format(item=item))
+        var = self.entrycget(ind, 'variable')
         grps = list(self._groups)
         vs = [str(self._groups[g]) for g in grps]
         try:
@@ -134,7 +142,12 @@ class SubMenu(tkinter.Menu):
             return None
 
     def set_item_group(self, item, group):
+        """Set item's group (radiobuttons only)."""
         ind = self.index(item)
+        try:
+            self.entrycget(ind, 'value')
+        except tkinter.TclError:
+            raise TypeError("Menu entry {item} is not a radiobutton".format(item=item))
         var = self._groups.get(group, None)
         if group is not None and group not in self._groups:
             var = tkinter.StringVar(self)
@@ -209,7 +222,7 @@ class SubMenu(tkinter.Menu):
             try:
                 self.entryconfigure(self.index(item), value=value)
             except tkinter.TclError:
-                raise TypeError("Menu entry {item} is not a checkbutton".format(item=item))
+                raise TypeError("Menu entry {item} is neither a checkbutton nor a radiobutton".format(item=item))
         else:
             var = self.entrycget(self.index(item), 'variable')
             self.setvar(var, value)

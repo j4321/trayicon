@@ -25,12 +25,48 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
 from gi.repository import Gtk, Gdk
 
+
 APPIND_SUPPORT = 1
 try:
     gi.require_version('AppIndicator3', '0.1')
     from gi.repository import AppIndicator3
 except ValueError:
     APPIND_SUPPORT = 0
+
+
+class RadioGroup:
+    def __init__(self, name, value=None):
+        self.name = name
+        self.value = value
+        self.group = []
+
+    def set_value(self, value):
+        self.value = value
+        for item in self.group:
+            item.set_active(item.value == value)
+
+
+class RadioMenuItem(Gtk.RadioMenuItem):
+    def __init__(self, group=None, value=None, command=None, **kwargs):
+        self.group = group if group is not None else RadioGroup(None)
+        if len(self.group.group) > 0:
+            gr = self.group.group[0]
+        else:
+            gr = None
+        Gtk.RadioMenuItem.__init__(self, group=gr, **kwargs)
+        self.group.group.append(self)
+        self.value = value
+        if command is not None:
+            self._command = command
+        else:
+            self._command = lambda: None
+
+        self.connect("activate", self.command)
+
+    def command(self, *args):
+        if self.get_active():
+            self.group.value = self.value
+            self._command()
 
 
 class SubMenu(Gtk.Menu):
@@ -42,6 +78,7 @@ class SubMenu(Gtk.Menu):
     def __init__(self, *args, **kwargs):
         """Create a SubMenu instance."""
         Gtk.Menu.__init__(self)
+        self._groups = {}
 
     def add_command(self, label="", command=None, image=None):
         """Add an item with given label and associated to given command to the menu."""
@@ -59,7 +96,6 @@ class SubMenu(Gtk.Menu):
         img = None
         if image is not None:
             img = Gtk.Image.new_from_file(image)
-            #self._images.append(img)
         item = Gtk.ImageMenuItem(label=label, image=img)
         self.append(item)
         if menu is not None:
@@ -76,6 +112,25 @@ class SubMenu(Gtk.Menu):
         self.append(item)
         if command is not None:
             item.connect("activate", lambda *args: command())
+        item.show()
+
+    def add_radiobutton(self, label="", command=None, value=None, group=None):
+        """
+        Add a radiobutton item with given label and associated to given command to the menu.
+
+        The radiobutton is part of given group name so that not two buttons in the
+        same group can be simutlaneously selected. It is associated to given value.
+        """
+        val = False
+        gr = self._groups.get(group, None)
+        if gr is None and group is not None:
+            gr = RadioGroup(group)
+            self._groups[group] = gr
+        else:
+            val = (gr.value == value) and (gr.value is not None)
+        item = RadioMenuItem(group=gr, value=value, label=label, command=command)
+        item.set_active(val)
+        self.append(item)
         item.show()
 
     def add_separator(self):
@@ -123,6 +178,37 @@ class SubMenu(Gtk.Menu):
                 raise ValueError("%r not in menu" % item)
             return i
 
+    def get_group_value(self, group):
+        """Return group's current value."""
+        return self._groups[group].value
+
+    def set_group_value(self, group, value):
+        """Set group's current value."""
+        self._groups[group].set_value(value)
+
+    def get_item_group(self, item, group):
+        """Return item's group."""
+        i = self.get_children()[self.index(item)]
+        try:
+            return i.group.name
+        except AttributeError:
+            raise TypeError("Menu entry {item} is not a radiobutton".format(item=item))
+
+    def set_item_group(self, item, group):
+        """Set item's group (radiobuttons only)."""
+        i = self.get_children()[self.index(item)]
+        try:
+            value = i.value
+        except AttributeError:
+            raise TypeError("Menu entry {item} is not a radiobutton".format(item=item))
+        gr = self._groups.get(group, None)
+        if gr is None:
+            gr = RadioGroup(group)
+            if group is not None:
+                self._groups[group] = gr
+        i.group = gr
+        i.set_active((gr.value == value) and (gr.value is not None))
+
     def set_item_image(self, item, image):
         item = self.get_children()[self.index(item)]
         img = item.get_image()
@@ -163,12 +249,26 @@ class SubMenu(Gtk.Menu):
 
     def get_item_value(self, item):
         """Return item value (True/False) if item is a checkbutton."""
-        return self.get_children()[self.index(item)].get_active()
+        i = self.get_children()[self.index(item)]
+        if isinstance(i, RadioMenuItem):
+            return i.value
+        elif isinstance(i, Gtk.CheckMenuItem):
+            return i.get_active()
+        else:
+            raise TypeError("Menu entry {item} is neither a checkbutton nor a radiobutton".format(item=item))
 
     def set_item_value(self, item, value):
         """Set item value if item is a checkbutton."""
         i = self.get_children()[self.index(item)]
-        i.set_active(value)
+        if isinstance(i, RadioMenuItem):
+            gr = i.group
+            i.value = value
+            if gr.name is not None:
+                i.set_active(value == gr.value)
+        elif isinstance(i, Gtk.CheckMenuItem):
+            i.set_active(value)
+        else:
+            raise TypeError("Menu entry {item} is neither a checkbutton nor a radiobutton".format(item=item))
 
 
 class TrayIcon:

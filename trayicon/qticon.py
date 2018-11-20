@@ -34,11 +34,22 @@ import sys
 
 
 class QRadioAction(QAction):
-    def __init__(self, *args, value=None, group=None, **kwargs):
+    def __init__(self, *args, value=None, group=None, command=None, **kwargs):
         kwargs.setdefault('checkable', True)
         QAction.__init__(self, *args, **kwargs)
         self.value = value
         self.group = group
+        self.groupname = None if group is None else group.name
+        if command is not None:
+            self._command = command
+        else:
+            self._command = lambda: None
+        self.triggered.connect(self.command)
+
+    def command(self, *args):
+        if self.group is not None:
+            self.group.value = self.value
+        self._command()
 
 
 class QRadioActionGroup(QActionGroup):
@@ -46,18 +57,9 @@ class QRadioActionGroup(QActionGroup):
         QActionGroup.__init__(self, *args, **kwargs)
         self.name = name
         self.setExclusive(True)
-        self.triggered.connect(self.onTriggered)
-        self._value = None
+        self.value = None
 
-    def onTriggered(self, action):
-        self._value = action.value
-
-    @property
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, value):
+    def set_value(self, value):
         for act in self.actions():
             act.setChecked(value == act.value)
 
@@ -120,10 +122,8 @@ class SubMenu(QMenu):
         if agroup is None and group is not None:
             agroup = QRadioActionGroup(group, self)
             self._groups[group] = agroup
-        action = QRadioAction(label, self, value=value, group=group,
+        action = QRadioAction(label, self, value=value, group=agroup, command=command,
                               checkable=True, checked=(value == agroup.value))
-        if command is not None:
-            action.triggered.connect(lambda *args: command())
         if agroup is not None:
             agroup.addAction(action)
         self.addAction(action)
@@ -172,10 +172,35 @@ class SubMenu(QMenu):
             return i
 
     def get_group_value(self, group):
+        """Return group's current value."""
         return self._groups[group].value
 
     def set_group_value(self, group, value):
+        """Set group's current value."""
         self._groups[group].value = value
+
+    def get_item_group(self, item, group):
+        """Return item's group."""
+        i = self.actions()[self.index(item)]
+        try:
+            gr = i.group
+            return None if gr is None else gr.name
+        except AttributeError:
+            raise TypeError("Menu entry {item} is not a radiobutton".format(item=item))
+
+    def set_item_group(self, item, group):
+        """Set item's group (radiobuttons only)."""
+        i = self.actions()[self.index(item)]
+        try:
+            value = i.value
+        except AttributeError:
+            raise TypeError("Menu entry {item} is not a radiobutton".format(item=item))
+        gr = self._groups.get(group, None)
+        if gr is None and group is not None:
+            gr = QRadioActionGroup(group, self)
+            self._groups[group] = gr
+        i.group = gr
+        i.set_active((gr is not None) and (gr.value == value))
 
     def set_item_image(self, item, image):
         i = self.actions()[self.index(item)]
@@ -224,6 +249,8 @@ class SubMenu(QMenu):
     def get_item_value(self, item):
         """Return item value (True/False) if item is a checkbutton."""
         i = self.actions()[self.index(item)]
+        if not i.isCheckable():
+            raise TypeError("Menu entry {item} is neither a checkbutton nor a radiobutton".format(item=item))
         try:
             return i.value
         except AttributeError:
@@ -232,6 +259,8 @@ class SubMenu(QMenu):
     def set_item_value(self, item, value):
         """Set item value if item is a checkbutton."""
         i = self.actions()[self.index(item)]
+        if not i.isCheckable():
+            raise TypeError("Menu entry {item} is neither a checkbutton nor a radiobutton".format(item=item))
         try:
             gr = self._groups.get(i.group, None)
             i.value = value
