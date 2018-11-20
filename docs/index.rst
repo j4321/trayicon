@@ -17,7 +17,7 @@ on the GUI toolkit used by the desktop environment.
 So this package aims at providing standardized classes enabling switching 
 between GUI toolkits depending which one gives the best system tray icon integration.
 
-trayicon provides the ``TrayIcon`` and ``SubMenu`` classes using qt 
+trayicon provides the :class:`TrayIcon` and :class:`SubMenu` classes using qt 
 (qticon submodule), gtk (gtkicon submodule) and tktray (tkicon submodule) 
 GUI toolkits. The classes possess the same methods in all three toolkits 
 and can therefore be used in the same way regardless of the toolkit. 

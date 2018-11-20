@@ -18,7 +18,7 @@ Package structure
         ├── SubMenu (class)
         └── TrayIcon (class)
 
-The ``SubMenu`` and ``TrayIcon`` classes of all three modules have in common the methods documented below.
+The :class:`SubMenu` and :class:`TrayIcon` classes of all three modules have in common the methods documented below.
 The aim of this module is to enable a simple switching between toolkits, for instance to allow the end-users
 to choose the toolkit best suited to their desktop environment.
 
@@ -31,25 +31,25 @@ SubMenu
 -------
 .. note::
 
-    The methods' argument named ``item`` refers to either an integer indicating
+    The methods' argument named :obj:`item` refers to either an integer indicating
     the position of the item in the menu (starting from 0) or the label (str)
     of the item. 
 
-    .. warning::
+.. warning::
 
-        If the ``SubMenu`` contains several items with the same label,
-        the methods will act on the first item with given label.
+    If the :class:`SubMenu` contains several items with the same label,
+    the methods will act on the first item with given label.
 
 .. class:: SubMenu(parent=None)
     
-    Menu or submenu for the system tray icon TrayIcon.
+    Menu or submenu for the system tray icon :class:`TrayIcon`.
     
     .. method:: __init__(parent=None)
     
         parent : 
             parent widget
 
-    .. method:: add_cascade(label="", menu=None)
+    .. method:: add_cascade(label="", menu=None, image=None)
     
         Add a submenu to the menu.
         
@@ -58,6 +58,9 @@ SubMenu
         
         menu : SubMenu
             submenu to add in the menu
+
+        image : str
+            path to an image to display on the left of the submenu's label
         
     .. method:: add_checkbutton(label="", command=None)
     
@@ -69,17 +72,42 @@ SubMenu
         command : function
             function executed when the checkbutton is clicked upon
         
-        The checkbutton state can be obtained/changed using the ``get_item_value``/``set_item_value`` methods.
+        The checkbutton state can be obtained/changed using :meth:`get_item_value`/:meth:`set_item_value`.
         
-    .. method:: add_command(label="", command=None)
+    .. method:: add_command(label="", command=None, image=None)
         
         Add an item with given label and associated to given command to the menu.
         
         label : str
             command's label
-        
+
         command : function
             function executed when the checkbutton is clicked upon
+
+        image : str
+            path to an image to display on the left of the submenu's label
+            
+    .. method:: add_radiobutton(self, label="", command=None, value=None, group=None)
+        
+        Add a radiobutton item with given label and associated to given command to the menu.
+        
+        label : str
+            command's label
+
+        command : function
+            function executed when the checkbutton is clicked upon
+
+        group : str
+            name of the group in which this radiobutton will be put.
+            All radiobuttons in a group are mutually exclusive.
+            
+        value : str
+            value associated to the group when this radiobutton is selected.
+            Each radiobutton in the group should have a unique value.
+            The current value of the group can be obtained/changed using
+            :meth:`get_group_value`/:meth:`set_group_value`.  The
+            value of the item can be obtained/changed using
+            :meth:`get_item_value`/:meth:`set_item_value`.
     
     .. method:: add_separator()
     
@@ -93,7 +121,7 @@ SubMenu
             first item's index or label
             
         item2 : int, str or None
-            second item's index or label, ``"end"`` or ``None``. 
+            second item's index or label, :obj:`"end"` or :obj:`None`. 
             If item2 is None, delete only the item corresponding to item1. 
             If item2 is "end" delete all items after item1 (included).
             
@@ -103,7 +131,52 @@ SubMenu
         Return the index of item.
         
         item : int or str 
-            item's index or label    
+            item's index or label
+
+    .. method:: get_group_value(group)
+    
+        Return group's current value.
+        
+        group : str
+            group's name
+
+    .. method:: set_group_value(group, value)
+    
+        Change group's current value, hence the selected radiobutton.
+
+        group : str
+            group's name
+
+        value : str
+            new value of the group
+        
+
+    .. method:: get_item_group(item)
+
+        Return item's group (radiobuttons only).
+
+        item : int or str 
+            item's index or label
+        
+    .. method:: set_item_group(item, group):
+
+        Set item's group (radiobuttons only).
+        
+        item : int or str 
+            item's index or label
+
+        group : str
+            group's name
+
+    .. method:: set_item_image(item, image)
+    
+        Set the item's image to given image.
+        
+        item : int or str 
+            item's index or label   
+            
+        image : str
+            path to the new image
             
     .. method:: get_item_label(item)
         
@@ -141,19 +214,19 @@ SubMenu
     
     .. method:: get_item_value(item)
     
-        Return item's value (True/False) if item is a checkbutton.
+        Return item's value if item is a checkbutton or a radiobutton.
         
         item : int or str 
             item's index or label    
     
     .. method:: set_item_value(item, value)
     
-        Set item's value if item is a checkbutton.
+        Set item's value if item is a checkbutton or a radiobutton.
         
         item : int or str 
             item's index or label    
             
-        value : bool
+        value : bool (checkbutton) or str (radiobutton)
             item's new value
     
     .. method:: disable_item(item)

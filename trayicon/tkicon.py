@@ -126,7 +126,7 @@ class SubMenu(tkinter.Menu):
         """Set group's current value."""
         self._groups[group].set(value)
 
-    def get_item_group(self, item, group):
+    def get_item_group(self, item):
         """Return item's group (radiobuttons only)."""
         ind = self.index(item)
         try:

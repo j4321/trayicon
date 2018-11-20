@@ -186,7 +186,7 @@ class SubMenu(Gtk.Menu):
         """Set group's current value."""
         self._groups[group].set_value(value)
 
-    def get_item_group(self, item, group):
+    def get_item_group(self, item):
         """Return item's group."""
         i = self.get_children()[self.index(item)]
         try:

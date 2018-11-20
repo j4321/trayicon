@@ -179,7 +179,7 @@ class SubMenu(QMenu):
         """Set group's current value."""
         self._groups[group].value = value
 
-    def get_item_group(self, item, group):
+    def get_item_group(self, item):
         """Return item's group."""
         i = self.actions()[self.index(item)]
         try:
