@@ -21,20 +21,51 @@ System tray icon using Qt.
 """
 
 try:
-    from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction
+    from PyQt5.QtWidgets import QApplication, QSystemTrayIcon, QMenu, QAction, QActionGroup
     from PyQt5.QtGui import QIcon
 except ImportError:
     try:
-        from PyQt4.QtGui import QApplication, QSystemTrayIcon, QMenu, QAction, QIcon
+        from PyQt4.QtGui import QApplication, QSystemTrayIcon, QMenu, QAction, QIcon, QActionGroup
+
     except ImportError:
-        from PySide.QtGui import QApplication, QSystemTrayIcon, QMenu, QAction, QIcon
+        from PySide.QtGui import QApplication, QSystemTrayIcon, QMenu, QAction, QIcon, QActionGroup
+
 import sys
+
+
+class QRadioAction(QAction):
+    def __init__(self, *args, value=None, group=None, **kwargs):
+        kwargs.setdefault('checkable', True)
+        QAction.__init__(self, *args, **kwargs)
+        self.value = value
+        self.group = group
+
+
+class QRadioActionGroup(QActionGroup):
+    def __init__(self, name, *args, **kwargs):
+        QActionGroup.__init__(self, *args, **kwargs)
+        self.name = name
+        self.setExclusive(True)
+        self.triggered.connect(self.onTriggered)
+        self._value = None
+
+    def onTriggered(self, action):
+        self._value = action.value
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        for act in self.actions():
+            act.setChecked(value == act.value)
 
 
 class SubMenu(QMenu):
     """
-    Menu or submenu for the system tray icon TrayIcon. 
-    
+    Menu or submenu for the system tray icon TrayIcon.
+
     Qt version.
     """
     def __init__(self, *args, label=None, parent=None, **kwargs):
@@ -44,6 +75,7 @@ class SubMenu(QMenu):
         else:
             QMenu.__init__(self, label, parent)
         self._images = []
+        self._groups = {}
 
     def add_command(self, label="", command=None, image=None):
         """Add an item with given label and associated to given command to the menu."""
@@ -69,13 +101,31 @@ class SubMenu(QMenu):
     def add_checkbutton(self, label="", command=None):
         """
         Add a checkbutton item with given label and associated to given command to the menu.
-        
+
         The checkbutton state can be obtained/changed using the ``get_item_value``/``set_item_value`` methods.
         """
-        action = QAction(label, self)
-        action.setCheckable(True)
+        action = QAction(label, self, checkable=True)
         if command is not None:
             action.triggered.connect(lambda *args: command())
+        self.addAction(action)
+
+    def add_radiobutton(self, label="", command=None, value=None, group=None):
+        """
+        Add a radiobutton item with given label and associated to given command to the menu.
+
+        The radiobutton is part of given group name so that not two buttons in the
+        same group can be simutlaneously selected. It is associated to given value.
+        """
+        agroup = self._groups.get(group, None)
+        if agroup is None and group is not None:
+            agroup = QRadioActionGroup(group, self)
+            self._groups[group] = agroup
+        action = QRadioAction(label, self, value=value, group=group,
+                              checkable=True, checked=(value == agroup.value))
+        if command is not None:
+            action.triggered.connect(lambda *args: command())
+        if agroup is not None:
+            agroup.addAction(action)
         self.addAction(action)
 
     def add_separator(self):
@@ -85,8 +135,8 @@ class SubMenu(QMenu):
     def delete(self, item1, item2=None):
         """
         Delete all items between item1 and item2 (included).
-        
-        If item2 is None, delete only the item corresponding to item1. 
+
+        If item2 is None, delete only the item corresponding to item1.
         """
         if len(self.actions()) == 0:
             return
@@ -102,7 +152,7 @@ class SubMenu(QMenu):
     def index(self, item):
         """
         Return the index of item.
-        
+
         item can be an integer corresponding to the entry number in the menu,
         the label of a menu entry or "end". In the fisrt case, the returned index will
         be identical to item.
@@ -120,6 +170,12 @@ class SubMenu(QMenu):
             except ValueError:
                 raise ValueError("%r not in menu" % item)
             return i
+
+    def get_group_value(self, group):
+        return self._groups[group].value
+
+    def set_group_value(self, group, value):
+        self._groups[group].value = value
 
     def set_item_image(self, item, image):
         i = self.actions()[self.index(item)]
@@ -142,16 +198,16 @@ class SubMenu(QMenu):
     def get_item_menu(self, item):
         """
         Return item's menu.
-        
+
         It is assumed that the item is a cascade.
         """
         i = self.actions()[self.index(item)]
         return i.menu()
-        
+
     def set_item_menu(self, item, menu):
         """
         Set item's menu to given menu (SubMenu instance).
-        
+
         It is assumed that the item is a cascade.
         """
         i = self.actions()[self.index(item)]
@@ -167,12 +223,22 @@ class SubMenu(QMenu):
 
     def get_item_value(self, item):
         """Return item value (True/False) if item is a checkbutton."""
-        return self.actions()[self.index(item)].isChecked()
+        i = self.actions()[self.index(item)]
+        try:
+            return i.value
+        except AttributeError:
+            return i.isChecked()
 
     def set_item_value(self, item, value):
         """Set item value if item is a checkbutton."""
         i = self.actions()[self.index(item)]
-        i.setChecked(value)
+        try:
+            gr = self._groups.get(i.group, None)
+            i.value = value
+            if gr is not None:
+                i.setChecked(value == gr.value)
+        except AttributeError:
+            i.setChecked(value)
 
 
 class TrayIcon(QApplication):
@@ -202,7 +268,7 @@ class TrayIcon(QApplication):
 
     def bind_left_click(self, command):
         """Bind command to left click on the icon."""
-        
+
         def action(reason):
             """Execute command only on left click (not when the menu is displayed)."""
             if reason == QSystemTrayIcon.Trigger:
