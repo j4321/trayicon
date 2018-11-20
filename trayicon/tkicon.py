@@ -41,6 +41,7 @@ class SubMenu(tkinter.Menu):
         """Create a SubMenu instance."""
         tkinter.Menu.__init__(self, parent, tearoff=tearoff)
         self._images = {}
+        self._groups = {}
 
     def add_command(self, label="", command=None, image=None):
         """Add an item with given label and associated to given command to the menu."""
@@ -68,6 +69,20 @@ class SubMenu(tkinter.Menu):
         """
         tkinter.Menu.add_checkbutton(self, label=label, command=command)
 
+    def add_radiobutton(self, label="", command=None, value=None, group=None):
+        """
+        Add a radiobutton item with given label and associated to given command to the menu.
+
+        The radiobutton is part of given group name so that not two buttons in the
+        same group can be simutlaneously selected. It is associated to given value.
+        """
+        var = self._groups.get(group, None)
+        if var is None and group is not None:
+            var = tkinter.StringVar(self)
+            self._groups[group] = var
+        tkinter.Menu.add_radiobutton(self, label=label, command=command,
+                                     variable=var, value=value)
+
     def add_separator(self):
         """Add a separator to the menu."""
         tkinter.Menu.add_separator(self)
@@ -75,8 +90,8 @@ class SubMenu(tkinter.Menu):
     def delete(self, item1, item2=None):
         """
         Delete all items between item1 and item2.
-        
-        If item2 is None, delete only the item corresponding to item1. 
+
+        If item2 is None, delete only the item corresponding to item1.
         """
         if item2 == "end":
             item2 = tkinter.Menu.index(self, "end")
@@ -102,7 +117,30 @@ class SubMenu(tkinter.Menu):
                     return 0
             else:
                 return i
-    
+
+    def get_group_value(self, group):
+        return self._groups[group].get()
+
+    def set_group_value(self, group, value):
+        self._groups[group].set(value)
+
+    def get_item_group(self, item, group):
+        var = self.entrycget(self.index(item), 'variable')
+        grps = list(self._groups)
+        vs = [str(self._groups[g]) for g in grps]
+        try:
+            return grps[vs.index(var)]
+        except ValueError:
+            return None
+
+    def set_item_group(self, item, group):
+        ind = self.index(item)
+        var = self._groups.get(group, None)
+        if group is not None and group not in self._groups:
+            var = tkinter.StringVar(self)
+            self._groups[group] = var
+        self.entryconfigure(ind, variable=var)
+
     def set_item_image(self, item, image):
         """Set the item's image to given image (path to file)."""
         ind = self.index(item)
@@ -150,22 +188,31 @@ class SubMenu(tkinter.Menu):
         self.entryconfigure(self.index(item), state='normal')
 
     def get_item_value(self, item):
-        """Return item's value (True/False) if item is a checkbutton."""
+        """Return item's value if item is a checkbutton or a radiobutton."""
         try:
             var = self.entrycget(self.index(item), 'variable')
             onvalue = self.entrycget(self.index(item), 'onvalue')
         except tkinter.TclError:
-            raise TypeError("Menu entry {item} is not a checkbutton".format(item=item))
+            try:
+                return self.entrycget(self.index(item), 'value')
+            except tkinter.TclError:
+                raise TypeError("Menu entry {item} is neither a checkbutton nor a radiobutton".format(item=item))
         else:
             return self.getvar(var) == onvalue
 
     def set_item_value(self, item, value):
-        """Set item's value if item is a checkbutton."""
+        """Set item's value if item is a checkbutton or a radiobutton."""
         try:
+            self.entrycget(self.index(item), 'onvalue')
+        except tkinter.TclError:
+            # this is not a checkbutton
+            try:
+                self.entryconfigure(self.index(item), value=value)
+            except tkinter.TclError:
+                raise TypeError("Menu entry {item} is not a checkbutton".format(item=item))
+        else:
             var = self.entrycget(self.index(item), 'variable')
             self.setvar(var, value)
-        except tkinter.TclError:
-            raise TypeError("Menu entry {item} is not a checkbutton".format(item=item))
 
 
 class TrayIcon(tkinter.BaseWidget, tkinter.Wm):
