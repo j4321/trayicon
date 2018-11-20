@@ -40,14 +40,25 @@ class SubMenu(tkinter.Menu):
     def __init__(self, *args, parent=None, tearoff=False, **kwarg):
         """Create a SubMenu instance."""
         tkinter.Menu.__init__(self, parent, tearoff=tearoff)
+        self._images = {}
 
-    def add_command(self, label="", command=None):
+    def add_command(self, label="", command=None, image=None):
         """Add an item with given label and associated to given command to the menu."""
-        tkinter.Menu.add_command(self, label=label, command=command)
+        img = None
+        if image is not None:
+            img = PhotoImage(file=image, master=self)
+            self._images[str(img)] = img
+        tkinter.Menu.add_command(self, label=label, command=command, image=img,
+                                 compound='left')
 
-    def add_cascade(self, label="", menu=None):
+    def add_cascade(self, label="", menu=None, image=None):
         """Add a submenu (SubMenu instance) with given label to the menu."""
-        tkinter.Menu.add_cascade(self, label=label, menu=menu)
+        img = None
+        if image is not None:
+            img = PhotoImage(file=image, master=self)
+            self._images[str(img)] = img
+        tkinter.Menu.add_cascade(self, label=label, menu=menu, image=img,
+                                 compound='left')
 
     def add_checkbutton(self, label="", command=None):
         """
@@ -91,6 +102,19 @@ class SubMenu(tkinter.Menu):
                     return 0
             else:
                 return i
+    
+    def set_item_image(self, item, image):
+        """Set the item's image to given image (path to file)."""
+        ind = self.index(item)
+        try:
+            del self._images[self.entrycget(ind, 'image')]
+        except KeyError:
+            pass
+        img = None
+        if image is not None:
+            img = PhotoImage(file=image, master=self)
+            self._images[str(img)] = img
+        self.entryconfigure(ind, image=img)
 
     def get_item_label(self, item):
         """Return item's label."""

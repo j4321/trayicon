@@ -36,24 +36,31 @@ except ValueError:
 class SubMenu(Gtk.Menu):
     """
     Menu or submenu for the system tray icon TrayIcon.
-    
+
     Gtk version.
     """
     def __init__(self, *args, **kwargs):
         """Create a SubMenu instance."""
         Gtk.Menu.__init__(self)
 
-    def add_command(self, label="", command=None):
+    def add_command(self, label="", command=None, image=None):
         """Add an item with given label and associated to given command to the menu."""
-        item = Gtk.MenuItem(label=label)
+        img = None
+        if image is not None:
+            img = Gtk.Image.new_from_file(image)
+        item = Gtk.ImageMenuItem(label=label, image=img)
         self.append(item)
         if command is not None:
             item.connect("activate", lambda *args: command())
         item.show()
 
-    def add_cascade(self, label="", menu=None):
+    def add_cascade(self, label="", menu=None, image=None):
         """Add a submenu (SubMenu instance) with given label to the menu."""
-        item = Gtk.MenuItem(label=label)
+        img = None
+        if image is not None:
+            img = Gtk.Image.new_from_file(image)
+            #self._images.append(img)
+        item = Gtk.ImageMenuItem(label=label, image=img)
         self.append(item)
         if menu is not None:
             item.set_submenu(menu)
@@ -62,7 +69,7 @@ class SubMenu(Gtk.Menu):
     def add_checkbutton(self, label="", command=None):
         """
         Add a checkbutton item with given label and associated to given command to the menu.
-        
+
         The checkbutton state can be obtained/changed using the ``get_item_value``/``set_item_value`` methods.
         """
         item = Gtk.CheckMenuItem(label=label)
@@ -80,8 +87,8 @@ class SubMenu(Gtk.Menu):
     def delete(self, item1, item2=None):
         """
         Delete all items between item1 and item2 (included).
-        
-        If item2 is None, delete only the item corresponding to item1. 
+
+        If item2 is None, delete only the item corresponding to item1.
         """
         if len(self.get_children()) == 0:
             return
@@ -97,7 +104,7 @@ class SubMenu(Gtk.Menu):
     def index(self, item):
         """
         Return the index of item.
-        
+
         item can be an integer corresponding to the entry number in the menu,
         the label of a menu entry or "end". In the fisrt case, the returned index will
         be identical to item.
@@ -116,6 +123,12 @@ class SubMenu(Gtk.Menu):
                 raise ValueError("%r not in menu" % item)
             return i
 
+    def set_item_image(self, item, image):
+        item = self.get_children()[self.index(item)]
+        img = item.get_image()
+        if image is not None:
+            img.set_from_file(image)
+
     def get_item_label(self, item):
         """Return item's label."""
         return self.get_children()[self.index(item)].get_label()
@@ -127,7 +140,7 @@ class SubMenu(Gtk.Menu):
     def get_item_menu(self, item):
         """
         Return item's menu.
-        
+
         It is assumed that the item is a cascade.
         """
         return self.get_children()[self.index(item)].get_submenu()
@@ -135,7 +148,7 @@ class SubMenu(Gtk.Menu):
     def set_item_menu(self, item, menu):
         """
         Set item's menu to given menu (SubMenu instance).
-        
+
         It is assumed that the item is a cascade.
         """
         self.get_children()[self.index(item)].set_submenu(menu)
@@ -162,7 +175,7 @@ class TrayIcon:
     """System tray icon, Gtk version."""
     def __init__(self, icon, fallback_icon_path, appid="TrayIcon", **kwargs):
         """Create a TrayIcon instance."""
-        
+
         self.menu = SubMenu()
 
         icon_exists = Gtk.IconTheme.get_default().has_icon(icon)
