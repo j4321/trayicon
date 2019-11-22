@@ -61,7 +61,9 @@ class QRadioActionGroup(QActionGroup):
 
     def set_value(self, value):
         for act in self.actions():
-            act.setChecked(value == act.value)
+            if value == act.value:
+                act.setChecked(True)
+                self.value = value
 
 
 class SubMenu(QMenu):
@@ -121,11 +123,13 @@ class SubMenu(QMenu):
         agroup = self._groups.get(group, None)
         if agroup is None and group is not None:
             agroup = QRadioActionGroup(group, self)
+            agroup.value = value
             self._groups[group] = agroup
         action = QRadioAction(label, self, value=value, group=agroup, command=command,
-                              checkable=True, checked=(value == agroup.value))
+                              checkable=True)
         if agroup is not None:
             agroup.addAction(action)
+            action.setChecked(value == agroup.value)
         self.addAction(action)
 
     def add_separator(self):
@@ -177,7 +181,7 @@ class SubMenu(QMenu):
 
     def set_group_value(self, group, value):
         """Set group's current value."""
-        self._groups[group].value = value
+        self._groups[group].set_value(value)
 
     def get_item_group(self, item):
         """Return item's group."""

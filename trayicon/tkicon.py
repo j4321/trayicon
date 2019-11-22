@@ -31,6 +31,18 @@ except ImportError:
     from tkinter import PhotoImage
 
 
+class RadioVar(tkinter.StringVar):
+    def __init__(self, *args, **kwargs):
+        tkinter.StringVar.__init__(self, *args, **kwargs)
+        self.values = []
+        self._value = self.get()
+
+    def set(self, value):
+        if value not in self.values:
+            return
+        tkinter.StringVar.set(self, value)
+
+
 class SubMenu(tkinter.Menu):
     """
     Menu or submenu for the system tray icon TrayIcon.
@@ -78,8 +90,10 @@ class SubMenu(tkinter.Menu):
         """
         var = self._groups.get(group, None)
         if var is None and group is not None:
-            var = tkinter.StringVar(self)
+            var = RadioVar(self, value)
             self._groups[group] = var
+        if var is not None:
+            var.values.append(value)
         tkinter.Menu.add_radiobutton(self, label=label, command=command,
                                      variable=var, value=value)
 

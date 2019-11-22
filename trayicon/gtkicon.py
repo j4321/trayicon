@@ -38,12 +38,21 @@ class RadioGroup:
     def __init__(self, name, value=None):
         self.name = name
         self.value = value
+        self.values = []
         self.group = []
 
+    def add(self, item):
+        self.group.append(item)
+        self.values.append(item.value)
+
     def set_value(self, value):
+        if value not in self.values:
+            return
         self.value = value
         for item in self.group:
-            item.set_active(item.value == value)
+            if item.value == value:
+                item.group_activated = True
+                item.set_active(True)
 
 
 class RadioMenuItem(Gtk.RadioMenuItem):
@@ -54,8 +63,9 @@ class RadioMenuItem(Gtk.RadioMenuItem):
         else:
             gr = None
         Gtk.RadioMenuItem.__init__(self, group=gr, **kwargs)
-        self.group.group.append(self)
         self.value = value
+        self.group.add(self)
+        self.group_activated = False
         if command is not None:
             self._command = command
         else:
@@ -65,8 +75,11 @@ class RadioMenuItem(Gtk.RadioMenuItem):
 
     def command(self, *args):
         if self.get_active():
-            self.group.value = self.value
-            self._command()
+            if self.group_activated:
+                self.group_activated = False
+            else:
+                self.group.value = self.value
+                self._command()
 
 
 class SubMenu(Gtk.Menu):
@@ -121,15 +134,11 @@ class SubMenu(Gtk.Menu):
         The radiobutton is part of given group name so that not two buttons in the
         same group can be simutlaneously selected. It is associated to given value.
         """
-        val = False
         gr = self._groups.get(group, None)
         if gr is None and group is not None:
             gr = RadioGroup(group)
             self._groups[group] = gr
-        else:
-            val = (gr.value == value) and (gr.value is not None)
         item = RadioMenuItem(group=gr, value=value, label=label, command=command)
-        item.set_active(val)
         self.append(item)
         item.show()
 
