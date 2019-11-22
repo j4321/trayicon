@@ -45,7 +45,7 @@ def make_icon(gui):
     icon = module.TrayIcon('icon.png', fallback_icon_path=icon_path)
 
     # command
-    icon.menu.add_command(label='Item 1', command=cmd1)
+    icon.menu.add_command(label='Item 1', command=cmd1, image=icon_path)
     # checkbutton
     icon.menu.add_checkbutton(label='Item 2', command=cmd2)
     # submenu
