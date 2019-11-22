@@ -35,6 +35,12 @@ def make_icon(gui):
     def cmd2():
         print('Item 2: %s' % icon.menu.get_item_value('Item 2'))
 
+    def cmd3():
+        print('Q1: %s' % icon.menu.get_group_value('Q1'))
+
+    def cmd4():
+        print('Q2: %s' % icon.menu.get_group_value('Q2'))
+
     if gui == 'qt':
         module = trayicon.qticon
     elif gui == 'gtk':
@@ -52,11 +58,17 @@ def make_icon(gui):
     submenu = module.SubMenu(parent=icon.menu)
     submenu.add_command('Subitem 1')
     submenu.add_command('Subitem 2')
-
     icon.menu.add_cascade(label='Submenu', menu=submenu)
     # separator
     icon.menu.add_separator()
+    # radiobuttons
+    icon.menu.add_radiobutton(label="Q1: a", command=cmd3, value="a", group="Q1")
+    icon.menu.add_radiobutton(label="Q1: b", command=cmd3, value="b", group="Q1")
+    icon.menu.add_radiobutton(label="Q2: a", command=cmd4, value="a", group="Q2")
+    icon.menu.add_radiobutton(label="Q2: b", command=cmd4, value="b", group="Q2")
 
+    # separator
+    icon.menu.add_separator()
     icon.menu.add_command(label='Quit', command=root.destroy)
 
     # start icon event loop
